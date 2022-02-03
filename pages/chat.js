@@ -1,10 +1,28 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import React from 'react';
 import appConfig from '../config.json';
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0Mzg0MTQyOCwiZXhwIjoxOTU5NDE3NDI4fQ.tvnt-PX-zO5kUUCjQ2DnUNJlI3Gsd8XDgbGhWk7O-h0';
+const SUPABASE_URL = 'https://uootpetooivpwxydefff.supabase.co';
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 
 export default function ChatPage() {
     const [mensagem, setMensagem] = React.useState('');
     const [listaDeMensagens, setListaDeMensagens] = React.useState([]);
+
+    React.useEffect(() => {
+        supabaseClient
+            .from('mensagens')
+            .select('*')
+            .order('id', { ascending: false })
+            .then(({ data }) => { // pegar um obj especifico dentro do conjunto de dados
+                //console.log('Dados da consulta:', data);
+                setListaDeMensagens(data);
+                console.log(data);
+            });
+    }, []);
     // Sua lógica vai aqui
     // Usuário
     // Digita mensagem no campo textarea
@@ -20,16 +38,34 @@ export default function ChatPage() {
     // [] Lista de mensagens
 
     function handleNovaMensagem(novaMensagem) {
-        const mensagem = {
-            id: listaDeMensagens.length + 1, //ids tem q ser unicos em html
+        const mensagem = { //mensagem é um obj --> dados dentro do objeto sao o que o backend espera
+            //id: listaDeMensagens.length + 1, //ids tem q ser unicos em html
             from: "Bea-Araujo",
             text: novaMensagem
         }
         //chamada de um backend
+        supabaseClient
+            .from('mensagens')
+            .insert([
+                // Objeto com os msm campos dentro do database no supabase
+                mensagem
+            ])
+            .then(({ data }) => {
+                console.log('Criando Mensagem:', data);
+                setListaDeMensagens([
+                    data[0],
+                    ...listaDeMensagens,
+                ]);
+
+
+            })
+        /*
+        
         setListaDeMensagens([
             mensagem,
             ...listaDeMensagens,
         ]);
+        */
     }
 
     return (
